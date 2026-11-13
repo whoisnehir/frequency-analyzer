@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "frequency-analyzer"
+version = "0.1.0"
+description = "Audio frequency analyzer: FFT spectrum, waveform and spectrogram with a tkinter GUI"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "numpy>=2.5",
+    "scipy>=1.18",
+    "matplotlib>=3.11",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.17",
+    "pytest>=9.2",
+]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP"]
+
+[tool.pytest]
+testpaths = ["tests"]
