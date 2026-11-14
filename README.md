@@ -1,5 +1,7 @@
 # Frequency Analyzer
 
+[![CI](https://github.com/whoisnehir/frequency-analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/whoisnehir/frequency-analyzer/actions/workflows/ci.yml)
+
 > **Status:** work in progress. Progress is tracked on the [project board](https://github.com/users/whoisnehir/projects/3).
 
 A desktop application that shows which frequencies an audio recording contains. It loads a WAV file, computes its spectrum with the Fast Fourier Transform (FFT) and displays the waveform, the frequency spectrum and the spectrogram in a dark-themed interface.
