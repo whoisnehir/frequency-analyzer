@@ -6,8 +6,6 @@
 
 A desktop application that shows which frequencies an audio recording contains. It loads a WAV file, computes its spectrum with the Fast Fourier Transform (FFT) and displays the waveform, the frequency spectrum and the spectrogram in a dark-themed interface.
 
-Built as the lab project for the Audio Signal Processing course (_Prelucrarea semnalelor auditive_) at Politehnica University of Timișoara.
-
 ## Planned features
 
 - Load a WAV file
@@ -95,4 +93,4 @@ pytest
 - [ ] [M3 Full plots](https://github.com/whoisnehir/frequency-analyzer/milestone/3): waveform and spectrogram
 - [ ] [M4 GUI](https://github.com/whoisnehir/frequency-analyzer/milestone/4): tkinter window, file picker, embedded plots, dark theme
 - [ ] [M5 Polish](https://github.com/whoisnehir/frequency-analyzer/milestone/5): dominant frequency, dB scale, error handling
-- [ ] [M6 Presentation prep](https://github.com/whoisnehir/frequency-analyzer/milestone/6): review of the code and the course concepts
+- [ ] [M6 Release](https://github.com/whoisnehir/frequency-analyzer/milestone/6): final code review, documentation and the v1.0.0 release
