@@ -6,8 +6,6 @@
 
 A desktop application that shows which frequencies an audio recording contains. It loads a WAV file, computes its spectrum with the Fast Fourier Transform (FFT) and displays the waveform, the frequency spectrum and the spectrogram in a dark-themed interface.
 
-Built as the lab project for the Audio Signal Processing course (_Prelucrarea semnalelor auditive_) at Politehnica University of Timișoara.
-
 ## Planned features
 
 - Load a WAV file
