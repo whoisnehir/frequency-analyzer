@@ -93,4 +93,4 @@ pytest
 - [ ] [M3 Full plots](https://github.com/whoisnehir/frequency-analyzer/milestone/3): waveform and spectrogram
 - [ ] [M4 GUI](https://github.com/whoisnehir/frequency-analyzer/milestone/4): tkinter window, file picker, embedded plots, dark theme
 - [ ] [M5 Polish](https://github.com/whoisnehir/frequency-analyzer/milestone/5): dominant frequency, dB scale, error handling
-- [ ] [M6 Presentation prep](https://github.com/whoisnehir/frequency-analyzer/milestone/6): review of the code and the course concepts
+- [ ] [M6 Release](https://github.com/whoisnehir/frequency-analyzer/milestone/6): final code review, documentation and the v1.0.0 release
