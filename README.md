@@ -28,6 +28,66 @@ Built as the lab project for the Audio Signal Processing course (_Prelucrarea se
 - **tkinter**: desktop interface
 - **ruff**, **pytest** and **GitHub Actions**: formatting, linting, tests and continuous integration
 
+## Installation
+
+Requires Python 3.13 or newer.
+
+```bash
+git clone https://github.com/whoisnehir/frequency-analyzer.git
+cd frequency-analyzer
+python -m venv .venv
+```
+
+Activate the virtual environment:
+
+```bash
+# Windows (Git Bash)
+source .venv/Scripts/activate
+
+# Windows (PowerShell)
+.venv\Scripts\Activate.ps1
+
+# Linux and macOS
+source .venv/bin/activate
+```
+
+Install the project with its development tools:
+
+```bash
+python -m pip install -e ".[dev]"
+```
+
+On Linux, the plot window also needs tkinter, which some distributions package separately (for example `sudo apt install python3-tk` on Debian and Ubuntu).
+
+## Usage
+
+Generate the test tones, then analyze one of them:
+
+```bash
+python scripts/generate_tones.py
+python -m frequency_analyzer samples/tone_440hz.wav
+```
+
+The script writes three two-second WAV files into `samples/`:
+
+| File                                | Content                                         |
+| ----------------------------------- | ----------------------------------------------- |
+| `tone_440hz.wav`                    | a 440 Hz tone                                   |
+| `mix_300_1000_2500hz.wav`           | a mix of 300, 1000 and 2500 Hz                  |
+| `stereo_440hz_left_660hz_right.wav` | 440 Hz on the left channel, 660 Hz on the right |
+
+The analyzer prints the dominant frequency (`Dominant frequency: 440.0 Hz`) and opens a window with the frequency spectrum. Close the window to return to the terminal. Other WAV files, mono or stereo, are analyzed the same way. `python -m frequency_analyzer --help` shows the usage.
+
+## Development
+
+The same checks run on every pull request with GitHub Actions:
+
+```bash
+ruff format --check .
+ruff check .
+pytest
+```
+
 ## Progress
 
 - [x] [M1 Setup](https://github.com/whoisnehir/frequency-analyzer/milestone/1): README, issue template, project structure, ruff, pytest, GitHub Actions
