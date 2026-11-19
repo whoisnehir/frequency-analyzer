@@ -66,15 +66,16 @@ python scripts/generate_tones.py
 python -m frequency_analyzer samples/tone_440hz.wav
 ```
 
-The script writes three two-second WAV files into `samples/`:
+The script writes four two-second WAV files into `samples/`:
 
 | File                                | Content                                         |
 | ----------------------------------- | ----------------------------------------------- |
 | `tone_440hz.wav`                    | a 440 Hz tone                                   |
 | `mix_300_1000_2500hz.wav`           | a mix of 300, 1000 and 2500 Hz                  |
 | `stereo_440hz_left_660hz_right.wav` | 440 Hz on the left channel, 660 Hz on the right |
+| `notes_880_440_1100_660hz.wav`      | four tones in a row: 880, 440, 1100 and 660 Hz  |
 
-The analyzer prints the dominant frequency (`Dominant frequency: 440.0 Hz`) and opens a window with the frequency spectrum. Close the window to return to the terminal. Other WAV files, mono or stereo, are analyzed the same way. `python -m frequency_analyzer --help` shows the usage.
+The analyzer prints the dominant frequency (`Dominant frequency: 440.0 Hz`) and opens one window with the waveform and the frequency spectrum side by side, and the spectrogram below them. The spectrogram shows how the frequencies change over time: try it on `notes_880_440_1100_660hz.wav` to see the four tones in order. Close the window to return to the terminal. Other WAV files, mono or stereo, are analyzed the same way. `python -m frequency_analyzer --help` shows the usage.
 
 ## Development
 
@@ -90,7 +91,7 @@ pytest
 
 - [x] [M1 Setup](https://github.com/whoisnehir/frequency-analyzer/milestone/1): README, issue template, project structure, ruff, pytest, GitHub Actions
 - [x] [M2 Core analysis](https://github.com/whoisnehir/frequency-analyzer/milestone/2): load a WAV file, compute the FFT, plot the spectrum
-- [ ] [M3 Full plots](https://github.com/whoisnehir/frequency-analyzer/milestone/3): waveform and spectrogram
+- [x] [M3 Full plots](https://github.com/whoisnehir/frequency-analyzer/milestone/3): waveform and spectrogram
 - [ ] [M4 GUI](https://github.com/whoisnehir/frequency-analyzer/milestone/4): tkinter window, file picker, embedded plots, dark theme
 - [ ] [M5 Polish](https://github.com/whoisnehir/frequency-analyzer/milestone/5): dominant frequency, dB scale, error handling
 - [ ] [M6 Release](https://github.com/whoisnehir/frequency-analyzer/milestone/6): final code review, documentation and the v1.0.0 release
