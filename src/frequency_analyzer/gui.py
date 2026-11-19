@@ -5,7 +5,7 @@ from pathlib import Path
 from tkinter import filedialog
 
 import numpy as np
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
 
 from frequency_analyzer.analysis import compute_spectrogram, compute_spectrum
@@ -35,6 +35,18 @@ def draw_analysis(figure: Figure, samples: np.ndarray, sample_rate: int) -> None
     plot_spectrogram(spectrogram_axes, *compute_spectrogram(samples, sample_rate))
 
 
+class NavigationToolbar(NavigationToolbar2Tk):
+    """The matplotlib navigation toolbar without the Subplots button.
+
+    The figure places its plots by itself (constrained layout), so the sliders
+    of the Subplots button would change nothing.
+    """
+
+    toolitems = [
+        item for item in NavigationToolbar2Tk.toolitems if item[0] != "Subplots"
+    ]
+
+
 class AnalyzerWindow:
     """A figure in the given tkinter window, below a bar for opening a WAV file."""
 
@@ -54,6 +66,8 @@ class AnalyzerWindow:
         self.figure = Figure(figsize=(11, 7.5), layout="constrained")
         self.figure.text(0.5, 0.5, EMPTY_HINT, ha="center", va="center")
         self.canvas = FigureCanvasTkAgg(self.figure, master=root)
+        self.toolbar = NavigationToolbar(self.canvas, root, pack_toolbar=False)
+        self.toolbar.pack(side=tk.BOTTOM, fill=tk.X)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
     def choose_file(self) -> None:
