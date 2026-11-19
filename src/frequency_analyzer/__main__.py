@@ -5,9 +5,13 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-from frequency_analyzer.analysis import compute_spectrum, dominant_frequency
+from frequency_analyzer.analysis import (
+    compute_spectrogram,
+    compute_spectrum,
+    dominant_frequency,
+)
 from frequency_analyzer.audio import load_wav
-from frequency_analyzer.plots import plot_spectrum
+from frequency_analyzer.plots import plot_spectrogram, plot_spectrum, plot_waveform
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -21,16 +25,23 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def main(argv: list[str] | None = None) -> None:
-    """Analyze a WAV file, print its dominant frequency and show its spectrum."""
+    """Analyze a WAV file, print its dominant frequency and show its plots."""
     args = parse_args(argv)
     samples, sample_rate = load_wav(args.path)
     frequencies, magnitudes = compute_spectrum(samples, sample_rate)
     dominant = dominant_frequency(frequencies, magnitudes)
     print(f"Dominant frequency: {dominant:.1f} Hz")
 
-    figure, axes = plt.subplots()
+    figure = plt.figure(figsize=(11, 7.5), layout="constrained")
     figure.canvas.manager.set_window_title(args.path.name)
-    plot_spectrum(axes, frequencies, magnitudes)
+    grid = figure.add_gridspec(2, 2)
+    waveform_axes = figure.add_subplot(grid[0, 0])
+    spectrum_axes = figure.add_subplot(grid[0, 1])
+    spectrogram_axes = figure.add_subplot(grid[1, :])
+
+    plot_waveform(waveform_axes, samples, sample_rate)
+    plot_spectrum(spectrum_axes, frequencies, magnitudes)
+    plot_spectrogram(spectrogram_axes, *compute_spectrogram(samples, sample_rate))
     plt.show()
 
 
