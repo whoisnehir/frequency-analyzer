@@ -4,8 +4,8 @@ import numpy as np
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 
-from frequency_analyzer.analysis import compute_spectrum
-from frequency_analyzer.plots import plot_spectrum, plot_waveform
+from frequency_analyzer.analysis import compute_spectrogram, compute_spectrum
+from frequency_analyzer.plots import plot_spectrogram, plot_spectrum, plot_waveform
 
 SAMPLE_RATE = 8000
 
@@ -85,3 +85,50 @@ def test_waveform_axes_go_from_zero_to_the_last_sample_and_full_scale():
 
     assert axes.get_xlim() == (0, (SAMPLE_RATE - 1) / SAMPLE_RATE)
     assert axes.get_ylim() == (-1, 1)
+
+
+def _draw_spectrogram_of_tones(sample_rate):
+    """Draw the spectrogram of a 440 Hz tone followed by an 880 Hz tone."""
+    time = np.arange(sample_rate // 2) / sample_rate
+    samples = np.concatenate(
+        [0.5 * np.sin(2 * np.pi * 440 * time), 0.5 * np.sin(2 * np.pi * 880 * time)]
+    )
+    times, frequencies, magnitudes = compute_spectrogram(samples, sample_rate)
+
+    figure = Figure()
+    FigureCanvasAgg(figure)
+    axes = figure.add_subplot()
+    plot_spectrogram(axes, times, frequencies, magnitudes)
+    figure.canvas.draw()
+    return axes, magnitudes
+
+
+def test_spectrogram_is_drawn_as_an_image_of_the_magnitudes():
+    axes, magnitudes = _draw_spectrogram_of_tones(SAMPLE_RATE)
+
+    assert len(axes.collections) == 1
+    mesh = axes.collections[0]
+    np.testing.assert_array_equal(mesh.get_array(), magnitudes)
+    assert mesh.get_cmap().name == "magma"
+
+
+def test_spectrogram_has_labels_a_title_and_a_color_bar():
+    axes, _ = _draw_spectrogram_of_tones(SAMPLE_RATE)
+
+    assert axes.get_xlabel() == "Time (s)"
+    assert axes.get_ylabel() == "Frequency (Hz)"
+    assert axes.get_title() == "Spectrogram"
+    color_bar_axes = axes.figure.axes[1]
+    assert color_bar_axes.get_ylabel() == "Amplitude"
+
+
+def test_spectrogram_frequency_axis_stops_at_5000_hz():
+    axes, _ = _draw_spectrogram_of_tones(44100)
+
+    assert axes.get_ylim() == (0, 5000)
+
+
+def test_spectrogram_frequency_axis_stops_at_nyquist_below_5000_hz():
+    axes, _ = _draw_spectrogram_of_tones(SAMPLE_RATE)
+
+    assert axes.get_ylim() == (0, SAMPLE_RATE / 2)
