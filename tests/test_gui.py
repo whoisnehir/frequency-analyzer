@@ -1,11 +1,14 @@
 """Tests for the plots inside the tkinter window."""
 
+import tkinter as tk
+
 import numpy as np
 import pytest
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
+from scipy.io import wavfile
 
-from frequency_analyzer.gui import draw_analysis
+from frequency_analyzer.gui import AnalyzerWindow, draw_analysis
 
 SAMPLE_RATE = 8000
 
@@ -51,3 +54,26 @@ def test_drawing_again_replaces_the_previous_plots():
     assert len(figure.axes) == 4
     waveform_line = figure.axes[0].lines[0]
     np.testing.assert_array_equal(waveform_line.get_ydata(), _tone(880))
+
+
+@pytest.fixture
+def root():
+    """Create a hidden tkinter window and close it after the test."""
+    window = tk.Tk()
+    window.withdraw()
+    yield window
+    window.destroy()
+
+
+def test_window_shows_the_plots_and_the_name_of_a_file(root, tmp_path):
+    path = tmp_path / "tone.wav"
+    wavfile.write(path, SAMPLE_RATE, np.round(_tone(440) * 32767).astype(np.int16))
+    window = AnalyzerWindow(root)
+
+    window.show_file(path)
+
+    assert root.title() == "tone.wav"
+    titles = [axes.get_title() for axes in window.figure.axes]
+    assert titles == ["Waveform", "Frequency spectrum", "Spectrogram", ""]
+    assert window.canvas.get_tk_widget().master is root
+    assert not window.figure.stale
