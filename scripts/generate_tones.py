@@ -8,11 +8,12 @@ from scipy.io import wavfile
 SAMPLE_RATE = 44100
 DURATION = 2.0
 OUTPUT_DIR = Path(__file__).resolve().parent.parent / "samples"
+NOTE_DURATION = 0.5
 
 
-def sine(frequency: float, amplitude: float) -> np.ndarray:
+def sine(frequency: float, amplitude: float, duration: float = DURATION) -> np.ndarray:
     """Return a sine wave of the given frequency, from -amplitude to amplitude."""
-    time = np.arange(int(SAMPLE_RATE * DURATION)) / SAMPLE_RATE
+    time = np.arange(int(SAMPLE_RATE * duration)) / SAMPLE_RATE
     return amplitude * np.sin(2 * np.pi * frequency * time)
 
 
@@ -30,6 +31,9 @@ def main() -> None:
         "mix_300_1000_2500hz.wav": sine(300, 0.4) + sine(1000, 0.25) + sine(2500, 0.15),
         "stereo_440hz_left_660hz_right.wav": np.column_stack(
             [sine(440, 0.5), sine(660, 0.3)]
+        ),
+        "notes_880_440_1100_660hz.wav": np.concatenate(
+            [sine(frequency, 0.5, NOTE_DURATION) for frequency in (880, 440, 1100, 660)]
         ),
     }
     for name, signal in tones.items():
