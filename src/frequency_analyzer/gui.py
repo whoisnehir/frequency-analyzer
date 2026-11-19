@@ -11,6 +11,9 @@ from frequency_analyzer.analysis import compute_spectrogram, compute_spectrum
 from frequency_analyzer.audio import load_wav
 from frequency_analyzer.plots import plot_spectrogram, plot_spectrum, plot_waveform
 
+APP_NAME = "Frequency Analyzer"
+EMPTY_HINT = "Open a WAV file to see its waveform, spectrum and spectrogram"
+
 
 def draw_analysis(figure: Figure, samples: np.ndarray, sample_rate: int) -> None:
     """Draw the waveform, the spectrum and the spectrogram on the given figure.
@@ -35,7 +38,9 @@ class AnalyzerWindow:
 
     def __init__(self, root: tk.Tk) -> None:
         self.root = root
+        self.root.title(APP_NAME)
         self.figure = Figure(figsize=(11, 7.5), layout="constrained")
+        self.figure.text(0.5, 0.5, EMPTY_HINT, ha="center", va="center")
         self.canvas = FigureCanvasTkAgg(self.figure, master=root)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
@@ -44,4 +49,4 @@ class AnalyzerWindow:
         samples, sample_rate = load_wav(path)
         draw_analysis(self.figure, samples, sample_rate)
         self.canvas.draw()
-        self.root.title(Path(path).name)
+        self.root.title(f"{Path(path).name} - {APP_NAME}")

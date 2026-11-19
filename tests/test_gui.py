@@ -65,15 +65,30 @@ def root():
     window.destroy()
 
 
+def _write_tone(path):
+    """Write a one-second 440 Hz tone as a 16-bit WAV file."""
+    samples = np.round(_tone(440) * 32767).astype(np.int16)
+    wavfile.write(path, SAMPLE_RATE, samples)
+    return path
+
+
+def test_window_shows_the_app_name_and_a_hint_before_a_file_is_opened(root):
+    window = AnalyzerWindow(root)
+
+    assert root.title() == "Frequency Analyzer"
+    hints = [text.get_text() for text in window.figure.texts]
+    assert hints == ["Open a WAV file to see its waveform, spectrum and spectrogram"]
+
+
 def test_window_shows_the_plots_and_the_name_of_a_file(root, tmp_path):
-    path = tmp_path / "tone.wav"
-    wavfile.write(path, SAMPLE_RATE, np.round(_tone(440) * 32767).astype(np.int16))
+    path = _write_tone(tmp_path / "tone.wav")
     window = AnalyzerWindow(root)
 
     window.show_file(path)
 
-    assert root.title() == "tone.wav"
+    assert root.title() == "tone.wav - Frequency Analyzer"
     titles = [axes.get_title() for axes in window.figure.axes]
     assert titles == ["Waveform", "Frequency spectrum", "Spectrogram", ""]
+    assert window.figure.texts == []
     assert window.canvas.get_tk_widget().master is root
     assert not window.figure.stale
