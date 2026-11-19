@@ -3,6 +3,8 @@
 import numpy as np
 from matplotlib.axes import Axes
 
+SPECTROGRAM_MAX_FREQUENCY = 5000
+
 
 def plot_spectrum(axes: Axes, frequencies: np.ndarray, magnitudes: np.ndarray) -> None:
     """Draw the amplitude spectrum as a line on the given axes.
@@ -33,3 +35,23 @@ def plot_waveform(axes: Axes, samples: np.ndarray, sample_rate: int) -> None:
     axes.set_xlabel("Time (s)")
     axes.set_ylabel("Amplitude")
     axes.set_title("Waveform")
+
+
+def plot_spectrogram(
+    axes: Axes, times: np.ndarray, frequencies: np.ndarray, magnitudes: np.ndarray
+) -> None:
+    """Draw the spectrogram as an image on the given axes, with a color bar.
+
+    Each segment is a column and each frequency a row, colored by its amplitude
+    with the magma colormap. The frequency axis stops at 5000 Hz, or at the
+    highest frequency if it is lower, where most of the content of music and
+    speech lies.
+    """
+    mesh = axes.pcolormesh(
+        times, frequencies, magnitudes, shading="nearest", cmap="magma"
+    )
+    axes.figure.colorbar(mesh, ax=axes, label="Amplitude")
+    axes.set_ylim(0, min(SPECTROGRAM_MAX_FREQUENCY, frequencies[-1]))
+    axes.set_xlabel("Time (s)")
+    axes.set_ylabel("Frequency (Hz)")
+    axes.set_title("Spectrogram")
