@@ -137,3 +137,33 @@ def test_cancelled_dialog_keeps_the_current_file(root, tmp_path, monkeypatch):
     assert window.file_label.cget("text") == "tone.wav"
     assert root.title() == "tone.wav - Frequency Analyzer"
     assert window.figure.axes[0].lines[0].get_ydata() is waveform
+
+
+def test_toolbar_is_below_the_plots_without_the_subplots_button(root):
+    window = AnalyzerWindow(root)
+
+    buttons = [item[0] for item in window.toolbar.toolitems if item[0] is not None]
+    assert buttons == ["Home", "Back", "Forward", "Pan", "Zoom", "Save"]
+    assert window.toolbar.master is root
+    assert window.toolbar.pack_info()["side"] == "bottom"
+
+
+def _zoom_into_the_spectrum(window):
+    """Zoom into 400-480 Hz as the Zoom button does, which saves both views."""
+    window.toolbar.push_current()
+    window.figure.axes[1].set_xlim(400, 480)
+    window.toolbar.push_current()
+
+
+def test_home_shows_the_whole_new_file_after_zooming_into_the_previous_one(
+    root, tmp_path
+):
+    window = AnalyzerWindow(root)
+    window.show_file(_write_tone(tmp_path / "first.wav"))
+    _zoom_into_the_spectrum(window)
+    window.show_file(_write_tone(tmp_path / "second.wav"))
+    _zoom_into_the_spectrum(window)
+
+    window.toolbar.home()
+
+    assert window.figure.axes[1].get_xlim() == (0, SAMPLE_RATE / 2)
