@@ -8,7 +8,11 @@ import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
 
-from frequency_analyzer.analysis import compute_spectrogram, compute_spectrum
+from frequency_analyzer.analysis import (
+    compute_spectrogram,
+    compute_spectrum,
+    dominant_frequency,
+)
 from frequency_analyzer.audio import load_wav
 from frequency_analyzer.plots import plot_spectrogram, plot_spectrum, plot_waveform
 
@@ -62,6 +66,8 @@ class AnalyzerWindow:
         self.open_button.pack(side=tk.LEFT)
         self.file_label = tk.Label(bar, text=NO_FILE_TEXT, padx=12)
         self.file_label.pack(side=tk.LEFT)
+        self.frequency_label = tk.Label(bar, padx=12)
+        self.frequency_label.pack(side=tk.RIGHT)
 
         self.figure = Figure(figsize=(11, 7.5), layout="constrained")
         self.figure.text(0.5, 0.5, EMPTY_HINT, ha="center", va="center")
@@ -81,10 +87,12 @@ class AnalyzerWindow:
             self.show_file(path)
 
     def show_file(self, path: str | Path) -> None:
-        """Load a WAV file, draw its plots and show its name above them."""
+        """Load a WAV file, draw its plots and show its name and dominant frequency."""
         samples, sample_rate = load_wav(path)
         draw_analysis(self.figure, samples, sample_rate)
         self.canvas.draw()
         name = Path(path).name
         self.file_label.configure(text=name)
         self.root.title(f"{name} - {APP_NAME}")
+        dominant = dominant_frequency(*compute_spectrum(samples, sample_rate))
+        self.frequency_label.configure(text=f"Dominant frequency: {dominant:.1f} Hz")

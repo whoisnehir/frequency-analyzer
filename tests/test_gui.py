@@ -75,9 +75,9 @@ def root(tk_root):
     window.destroy()
 
 
-def _write_tone(path):
-    """Write a one-second 440 Hz tone as a 16-bit WAV file."""
-    samples = np.round(_tone(440) * 32767).astype(np.int16)
+def _write_tone(path, frequency=440):
+    """Write a one-second tone as a 16-bit WAV file."""
+    samples = np.round(_tone(frequency) * 32767).astype(np.int16)
     wavfile.write(path, SAMPLE_RATE, samples)
     return path
 
@@ -88,6 +88,7 @@ def test_window_shows_the_app_name_and_a_hint_before_a_file_is_opened(root):
     assert root.title() == "Frequency Analyzer"
     hints = [text.get_text() for text in window.figure.texts]
     assert window.file_label.cget("text") == "No file loaded"
+    assert window.frequency_label.cget("text") == ""
     assert hints == ["Open a WAV file to see its waveform, spectrum and spectrogram"]
 
 
@@ -167,3 +168,15 @@ def test_home_shows_the_whole_new_file_after_zooming_into_the_previous_one(
     window.toolbar.home()
 
     assert window.figure.axes[1].get_xlim() == (0, SAMPLE_RATE / 2)
+
+
+def test_window_shows_the_dominant_frequency_of_each_file(root, tmp_path):
+    window = AnalyzerWindow(root)
+
+    window.show_file(_write_tone(tmp_path / "a4.wav", 440))
+    first = window.frequency_label.cget("text")
+    window.show_file(_write_tone(tmp_path / "a5.wav", 880))
+
+    assert first == "Dominant frequency: 440.0 Hz"
+    assert window.frequency_label.cget("text") == "Dominant frequency: 880.0 Hz"
+    assert window.frequency_label.pack_info()["side"] == "right"
