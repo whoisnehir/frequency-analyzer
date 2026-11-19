@@ -1,0 +1,47 @@
+"""Desktop window that shows the plots of a WAV file."""
+
+import tkinter as tk
+from pathlib import Path
+
+import numpy as np
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+
+from frequency_analyzer.analysis import compute_spectrogram, compute_spectrum
+from frequency_analyzer.audio import load_wav
+from frequency_analyzer.plots import plot_spectrogram, plot_spectrum, plot_waveform
+
+
+def draw_analysis(figure: Figure, samples: np.ndarray, sample_rate: int) -> None:
+    """Draw the waveform, the spectrum and the spectrogram on the given figure.
+
+    The waveform and the spectrum are side by side, and the spectrogram is below
+    them across the whole width. Anything already on the figure is removed
+    first, so that the same figure can show one file after another.
+    """
+    figure.clear()
+    grid = figure.add_gridspec(2, 2)
+    waveform_axes = figure.add_subplot(grid[0, 0])
+    spectrum_axes = figure.add_subplot(grid[0, 1])
+    spectrogram_axes = figure.add_subplot(grid[1, :])
+
+    plot_waveform(waveform_axes, samples, sample_rate)
+    plot_spectrum(spectrum_axes, *compute_spectrum(samples, sample_rate))
+    plot_spectrogram(spectrogram_axes, *compute_spectrogram(samples, sample_rate))
+
+
+class AnalyzerWindow:
+    """A matplotlib figure inside the given tkinter window."""
+
+    def __init__(self, root: tk.Tk) -> None:
+        self.root = root
+        self.figure = Figure(figsize=(11, 7.5), layout="constrained")
+        self.canvas = FigureCanvasTkAgg(self.figure, master=root)
+        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+    def show_file(self, path: str | Path) -> None:
+        """Load a WAV file, draw its plots and show its name in the title bar."""
+        samples, sample_rate = load_wav(path)
+        draw_analysis(self.figure, samples, sample_rate)
+        self.canvas.draw()
+        self.root.title(Path(path).name)
