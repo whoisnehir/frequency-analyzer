@@ -3,7 +3,11 @@
 import numpy as np
 import pytest
 
-from frequency_analyzer.analysis import compute_spectrum, dominant_frequency
+from frequency_analyzer.analysis import (
+    compute_spectrogram,
+    compute_spectrum,
+    dominant_frequency,
+)
 
 SAMPLE_RATE = 8000
 
@@ -63,3 +67,33 @@ def test_tone_between_two_frequencies_does_not_leak_far_away():
     far_away = magnitudes[frequencies == 600][0]
 
     assert far_away < 1e-4
+
+
+def test_spectrogram_uses_50_ms_segments_every_25_ms():
+    times, frequencies, magnitudes = compute_spectrogram(_sine(440), SAMPLE_RATE)
+
+    assert times[0] == pytest.approx(0.025)
+    np.testing.assert_allclose(np.diff(times), 0.025)
+    assert frequencies[1] == pytest.approx(20)
+    assert magnitudes.shape == (len(frequencies), len(times))
+
+
+def test_spectrogram_follows_tones_over_time():
+    samples = np.concatenate([_sine(440, duration=0.5), _sine(880, duration=0.5)])
+
+    times, frequencies, magnitudes = compute_spectrogram(samples, SAMPLE_RATE)
+
+    strongest = frequencies[magnitudes.argmax(axis=0)]
+    assert np.all(strongest[times < 0.45] == 440)
+    assert np.all(strongest[times > 0.55] == 880)
+
+
+def test_spectrogram_peak_equals_the_amplitude():
+    _, _, magnitudes = compute_spectrogram(_sine(440, amplitude=0.5), SAMPLE_RATE)
+
+    np.testing.assert_allclose(magnitudes.max(axis=0), 0.5, rtol=0.01)
+
+
+def test_signal_shorter_than_one_segment_is_rejected():
+    with pytest.raises(ValueError, match="shorter than one segment"):
+        compute_spectrogram(_sine(440, duration=0.01), SAMPLE_RATE)
