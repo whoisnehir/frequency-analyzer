@@ -5,6 +5,7 @@ from scipy.fft import rfft, rfftfreq
 from scipy.signal import get_window
 
 SEGMENT_DURATION = 0.05
+DECIBEL_FLOOR = -120
 
 
 def compute_spectrum(
@@ -60,3 +61,13 @@ def compute_spectrogram(
     times = (np.array(starts) + segment_length / 2) / sample_rate
     frequencies = rfftfreq(segment_length, d=1 / sample_rate)
     return times, frequencies, np.column_stack(columns)
+
+
+def to_decibels(amplitudes: np.ndarray) -> np.ndarray:
+    """Convert amplitudes to decibels relative to full scale (an amplitude of 1).
+
+    Amplitudes below DECIBEL_FLOOR, silence included, are raised to it, so that
+    the result never contains minus infinity.
+    """
+    floor = 10 ** (DECIBEL_FLOOR / 20)
+    return 20 * np.log10(np.maximum(amplitudes, floor))

@@ -7,6 +7,7 @@ from frequency_analyzer.analysis import (
     compute_spectrogram,
     compute_spectrum,
     dominant_frequency,
+    to_decibels,
 )
 
 SAMPLE_RATE = 8000
@@ -97,3 +98,24 @@ def test_spectrogram_peak_equals_the_amplitude():
 def test_signal_shorter_than_one_segment_is_rejected():
     with pytest.raises(ValueError, match="shorter than one segment"):
         compute_spectrogram(_sine(440, duration=0.01), SAMPLE_RATE)
+
+
+def test_amplitudes_are_converted_to_decibels():
+    decibels = to_decibels(np.array([1.0, 0.5, 0.1, 0.001]))
+
+    np.testing.assert_allclose(decibels, [0.0, -6.0206, -20.0, -60.0], atol=1e-4)
+
+
+def test_silence_stays_at_the_decibel_floor():
+    decibels = to_decibels(np.array([0.0, 1e-9]))
+
+    np.testing.assert_array_equal(decibels, [-120.0, -120.0])
+
+
+def test_spectrogram_table_keeps_its_shape_in_decibels():
+    _, _, magnitudes = compute_spectrogram(_sine(440, amplitude=0.5), SAMPLE_RATE)
+
+    decibels = to_decibels(magnitudes)
+
+    assert decibels.shape == magnitudes.shape
+    assert decibels.max() == pytest.approx(-6.02, abs=0.1)
