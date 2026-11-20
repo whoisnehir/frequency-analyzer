@@ -1,7 +1,7 @@
 """Tests for the plots inside the tkinter window."""
 
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 
 import numpy as np
 import pytest
@@ -9,6 +9,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 from scipy.io import wavfile
 
+from frequency_analyzer.audio import AudioFileError
 from frequency_analyzer.gui import AnalyzerWindow, draw_analysis
 
 SAMPLE_RATE = 8000
@@ -220,3 +221,68 @@ def test_decibels_box_does_nothing_before_a_file_is_opened(root):
     assert window.figure.axes == []
     hints = [text.get_text() for text in window.figure.texts]
     assert hints == ["Open a WAV file to see its waveform, spectrum and spectrogram"]
+
+
+def test_error_while_computing_leaves_the_figure_as_it_was():
+    figure = _draw_on_new_figure(_tone(440))
+    waveform = figure.axes[0].lines[0].get_ydata()
+
+    with pytest.raises(ValueError):
+        draw_analysis(figure, _tone(440)[:100], SAMPLE_RATE)
+
+    assert len(figure.axes) == 4
+    assert figure.axes[0].lines[0].get_ydata() is waveform
+
+
+def test_file_shorter_than_50_ms_is_rejected_before_changing_the_window(root, tmp_path):
+    window = AnalyzerWindow(root)
+    window.show_file(_write_tone(tmp_path / "tone.wav"))
+    short_path = tmp_path / "short.wav"
+    wavfile.write(short_path, SAMPLE_RATE, np.zeros(80, dtype=np.int16))
+
+    with pytest.raises(AudioFileError) as error_info:
+        window.show_file(short_path)
+
+    assert str(error_info.value) == (
+        f"{short_path} is too short to analyze: it lasts 10 ms, "
+        "and at least 50 ms are needed."
+    )
+    assert window.file_label.cget("text") == "tone.wav"
+    assert root.title() == "tone.wav - Frequency Analyzer"
+    assert len(window.samples) == SAMPLE_RATE
+
+
+def test_file_that_cannot_be_opened_is_reported_in_an_error_dialog(
+    root, tmp_path, monkeypatch
+):
+    window = AnalyzerWindow(root)
+    window.show_file(_write_tone(tmp_path / "tone.wav"))
+    waveform = window.figure.axes[0].lines[0].get_ydata()
+    text_path = tmp_path / "notes.wav"
+    text_path.write_text("hello")
+    errors = []
+    monkeypatch.setattr(filedialog, "askopenfilename", lambda **options: str(text_path))
+    monkeypatch.setattr(
+        messagebox,
+        "showerror",
+        lambda title, message, **options: errors.append((title, message)),
+    )
+
+    window.choose_file()
+
+    assert errors == [
+        ("Cannot open the file", f"{text_path} is not a WAV file that can be read.")
+    ]
+    assert window.file_label.cget("text") == "tone.wav"
+    assert window.figure.axes[0].lines[0].get_ydata() is waveform
+
+
+def test_silent_file_has_no_dominant_frequency(root, tmp_path):
+    path = tmp_path / "silence.wav"
+    wavfile.write(path, SAMPLE_RATE, np.zeros(SAMPLE_RATE, dtype=np.int16))
+    window = AnalyzerWindow(root)
+
+    window.show_file(path)
+
+    assert window.frequency_label.cget("text") == "Dominant frequency: none (silence)"
+    assert len(window.figure.axes) == 4
