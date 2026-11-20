@@ -83,6 +83,17 @@ python -m frequency_analyzer samples/notes_880_440_1100_660hz.wav
 
 The bar at the top shows the name of the file and its dominant frequency (`Dominant frequency: 440.0 Hz`). Below it, the waveform and the frequency spectrum are side by side, and the spectrogram is under them. The spectrogram shows how the frequencies change over time: try it on `notes_880_440_1100_660hz.wav` to see the four tones in order. The toolbar at the bottom zooms into the plots, pans them and saves them as an image, and shows the time, frequency and amplitude under the mouse pointer. Other WAV files, mono or stereo, are analyzed the same way. `python -m frequency_analyzer --help` shows the usage.
 
+Tick **Decibels** to show the spectrum and the spectrogram in decibels relative to full scale (dBFS): 0 dB is the largest possible amplitude, and every 20 dB down is ten times smaller. Both plots then range from −120 to 0 dB, so quiet frequencies that are invisible on the linear scale become visible.
+
+Files that cannot be analyzed are reported with a short message: a file that does not exist, cannot be opened or is not a WAV file, and a file shorter than 50 ms (the length of one spectrogram segment). In the window the message appears in an error dialog and the current file stays open; on the command line it is printed as an error and the analyzer exits with code 1:
+
+```text
+$ python -m frequency_analyzer samples/missing.wav
+python -m frequency_analyzer: error: samples/missing.wav does not exist.
+```
+
+A silent file is analyzed normally but has no dominant frequency: `Dominant frequency: none (silence)`.
+
 ## Development
 
 The same checks run on every pull request with GitHub Actions, where the window tests use a virtual display (`xvfb-run pytest`):
