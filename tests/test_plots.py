@@ -4,7 +4,11 @@ import numpy as np
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 
-from frequency_analyzer.analysis import compute_spectrogram, compute_spectrum
+from frequency_analyzer.analysis import (
+    compute_spectrogram,
+    compute_spectrum,
+    to_decibels,
+)
 from frequency_analyzer.plots import plot_spectrogram, plot_spectrum, plot_waveform
 
 SAMPLE_RATE = 8000
@@ -132,3 +136,37 @@ def test_spectrogram_frequency_axis_stops_at_nyquist_below_5000_hz():
     axes, _ = _draw_spectrogram_of_tones(SAMPLE_RATE)
 
     assert axes.get_ylim() == (0, SAMPLE_RATE / 2)
+
+
+def _new_axes():
+    """Return the axes of a new off-screen figure."""
+    figure = Figure()
+    FigureCanvasAgg(figure)
+    return figure.add_subplot()
+
+
+def test_spectrum_in_decibels_goes_from_the_floor_to_0_db():
+    time = np.arange(SAMPLE_RATE) / SAMPLE_RATE
+    frequencies, magnitudes = compute_spectrum(
+        0.5 * np.sin(2 * np.pi * 440 * time), SAMPLE_RATE
+    )
+    axes = _new_axes()
+
+    plot_spectrum(axes, frequencies, to_decibels(magnitudes), decibels=True)
+
+    np.testing.assert_array_equal(axes.lines[0].get_ydata(), to_decibels(magnitudes))
+    assert axes.get_ylim() == (-120, 0)
+    assert axes.get_ylabel() == "Amplitude (dB)"
+
+
+def test_spectrogram_in_decibels_colors_from_the_floor_to_0_db():
+    time = np.arange(SAMPLE_RATE) / SAMPLE_RATE
+    times, frequencies, magnitudes = compute_spectrogram(
+        0.5 * np.sin(2 * np.pi * 440 * time), SAMPLE_RATE
+    )
+    axes = _new_axes()
+
+    plot_spectrogram(axes, times, frequencies, to_decibels(magnitudes), decibels=True)
+
+    assert axes.collections[0].get_clim() == (-120, 0)
+    assert axes.figure.axes[1].get_ylabel() == "Amplitude (dB)"
