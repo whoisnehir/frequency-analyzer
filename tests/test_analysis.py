@@ -119,3 +119,20 @@ def test_spectrogram_table_keeps_its_shape_in_decibels():
 
     assert decibels.shape == magnitudes.shape
     assert decibels.max() == pytest.approx(-6.02, abs=0.1)
+
+
+@pytest.mark.parametrize(
+    "samples",
+    [np.zeros(SAMPLE_RATE), np.full(SAMPLE_RATE, 0.3), _sine(440, amplitude=1e-7)],
+    ids=["zeros", "constant", "below-the-floor"],
+)
+def test_silence_has_no_dominant_frequency(samples):
+    frequencies, magnitudes = compute_spectrum(samples, SAMPLE_RATE)
+
+    assert dominant_frequency(frequencies, magnitudes) is None
+
+
+def test_quiet_tone_above_the_floor_still_has_a_dominant_frequency():
+    frequencies, magnitudes = compute_spectrum(_sine(440, amplitude=1e-5), SAMPLE_RATE)
+
+    assert dominant_frequency(frequencies, magnitudes) == 440
