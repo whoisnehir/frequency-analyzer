@@ -180,3 +180,43 @@ def test_window_shows_the_dominant_frequency_of_each_file(root, tmp_path):
     assert first == "Dominant frequency: 440.0 Hz"
     assert window.frequency_label.cget("text") == "Dominant frequency: 880.0 Hz"
     assert window.frequency_label.pack_info()["side"] == "right"
+
+
+def test_analysis_in_decibels_draws_the_spectrum_and_the_spectrogram_in_db():
+    figure = Figure(layout="constrained")
+    FigureCanvasAgg(figure)
+
+    draw_analysis(figure, _tone(440), SAMPLE_RATE, decibels=True)
+
+    waveform, spectrum, spectrogram, color_bar = figure.axes
+    assert waveform.get_ylabel() == "Amplitude"
+    assert spectrum.get_ylabel() == "Amplitude (dB)"
+    assert spectrum.lines[0].get_ydata().max() == pytest.approx(-6.02, abs=0.1)
+    assert color_bar.get_ylabel() == "Amplitude (dB)"
+    mesh = spectrogram.collections[0]
+    assert mesh.get_array().max() == pytest.approx(-6.02, abs=0.1)
+    assert mesh.get_clim() == (-120, 0)
+
+
+def test_decibels_box_switches_the_plots_of_the_current_file(root, tmp_path):
+    window = AnalyzerWindow(root)
+    window.show_file(_write_tone(tmp_path / "tone.wav"))
+
+    window.decibels_button.invoke()
+    in_decibels = window.figure.axes[1].get_ylabel()
+    window.decibels_button.invoke()
+
+    assert in_decibels == "Amplitude (dB)"
+    assert window.figure.axes[1].get_ylabel() == "Amplitude"
+    assert not window.figure.stale
+
+
+def test_decibels_box_does_nothing_before_a_file_is_opened(root):
+    window = AnalyzerWindow(root)
+
+    window.decibels.set(True)
+    window.redraw()
+
+    assert window.figure.axes == []
+    hints = [text.get_text() for text in window.figure.texts]
+    assert hints == ["Open a WAV file to see its waveform, spectrum and spectrogram"]
