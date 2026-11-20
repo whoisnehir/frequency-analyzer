@@ -6,6 +6,7 @@ from scipy.signal import get_window
 
 SEGMENT_DURATION = 0.05
 DECIBEL_FLOOR = -120
+_FLOOR_AMPLITUDE = 10 ** (DECIBEL_FLOOR / 20)
 
 
 def compute_spectrum(
@@ -28,9 +29,15 @@ def compute_spectrum(
     return frequencies, magnitudes
 
 
-def dominant_frequency(frequencies: np.ndarray, magnitudes: np.ndarray) -> float:
-    """Return the frequency with the largest magnitude."""
-    return float(frequencies[np.argmax(magnitudes)])
+def dominant_frequency(frequencies: np.ndarray, magnitudes: np.ndarray) -> float | None:
+    """Return the frequency with the largest magnitude.
+
+    Returns None for silence, when no magnitude reaches DECIBEL_FLOOR.
+    """
+    strongest = np.argmax(magnitudes)
+    if magnitudes[strongest] < _FLOOR_AMPLITUDE:
+        return None
+    return float(frequencies[strongest])
 
 
 def compute_spectrogram(
@@ -69,5 +76,4 @@ def to_decibels(amplitudes: np.ndarray) -> np.ndarray:
     Amplitudes below DECIBEL_FLOOR, silence included, are raised to it, so that
     the result never contains minus infinity.
     """
-    floor = 10 ** (DECIBEL_FLOOR / 20)
-    return 20 * np.log10(np.maximum(amplitudes, floor))
+    return 20 * np.log10(np.maximum(amplitudes, _FLOOR_AMPLITUDE))

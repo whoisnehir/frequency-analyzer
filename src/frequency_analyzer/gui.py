@@ -2,19 +2,20 @@
 
 import tkinter as tk
 from pathlib import Path
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
 
 from frequency_analyzer.analysis import (
+    SEGMENT_DURATION,
     compute_spectrogram,
     compute_spectrum,
     dominant_frequency,
     to_decibels,
 )
-from frequency_analyzer.audio import load_wav
+from frequency_analyzer.audio import AudioFileError, load_wav
 from frequency_analyzer.plots import plot_spectrogram, plot_spectrum, plot_waveform
 
 APP_NAME = "Frequency Analyzer"
@@ -30,19 +31,20 @@ def draw_analysis(
     The waveform and the spectrum are side by side, and the spectrogram is below
     them across the whole width. With decibels=True, the spectrum and the
     spectrogram are drawn in dB. Anything already on the figure is removed
-    first, so that the same figure can show one file after another.
+    first, so that the same figure can show one file after another. Everything is
+    computed before that, so that an error leaves the figure as it was.
     """
-    figure.clear()
-    grid = figure.add_gridspec(2, 2)
-    waveform_axes = figure.add_subplot(grid[0, 0])
-    spectrum_axes = figure.add_subplot(grid[0, 1])
-    spectrogram_axes = figure.add_subplot(grid[1, :])
-
     frequencies, magnitudes = compute_spectrum(samples, sample_rate)
     times, segment_frequencies, segments = compute_spectrogram(samples, sample_rate)
     if decibels:
         magnitudes = to_decibels(magnitudes)
         segments = to_decibels(segments)
+
+    figure.clear()
+    grid = figure.add_gridspec(2, 2)
+    waveform_axes = figure.add_subplot(grid[0, 0])
+    spectrum_axes = figure.add_subplot(grid[0, 1])
+    spectrogram_axes = figure.add_subplot(grid[1, :])
 
     plot_waveform(waveform_axes, samples, sample_rate)
     plot_spectrum(spectrum_axes, frequencies, magnitudes, decibels)
@@ -95,25 +97,44 @@ class AnalyzerWindow:
         self.sample_rate = 0
 
     def choose_file(self) -> None:
-        """Ask for a WAV file in a dialog and show it, unless it is cancelled."""
+        """Ask for a WAV file in a dialog and show it, unless it is cancelled.
+
+        A file that cannot be analyzed is reported in an error dialog, and the
+        window keeps the current file.
+        """
         path = filedialog.askopenfilename(
             parent=self.root,
             title="Open a WAV file",
             filetypes=[("WAV files", "*.wav")],
         )
-        if path:
+        if not path:
+            return
+        try:
             self.show_file(path)
+        except AudioFileError as error:
+            messagebox.showerror("Cannot open the file", str(error), parent=self.root)
 
     def show_file(self, path: str | Path) -> None:
-        """Load a WAV file, draw its plots and show its name and dominant frequency."""
+        """Load a WAV file, draw its plots and show its name and dominant frequency.
+
+        Raises AudioFileError, before changing anything in the window, if the file
+        cannot be read or is shorter than one spectrogram segment (50 ms).
+        """
         samples, sample_rate = load_wav(path)
+        duration = len(samples) / sample_rate
+        if duration < SEGMENT_DURATION:
+            raise AudioFileError(
+                f"{path} is too short to analyze: it lasts {int(duration * 1000)} ms, "
+                f"and at least {SEGMENT_DURATION * 1000:.0f} ms are needed."
+            )
         self.samples, self.sample_rate = samples, sample_rate
         self.redraw()
         name = Path(path).name
         self.file_label.configure(text=name)
         self.root.title(f"{name} - {APP_NAME}")
         dominant = dominant_frequency(*compute_spectrum(samples, sample_rate))
-        self.frequency_label.configure(text=f"Dominant frequency: {dominant:.1f} Hz")
+        value = "none (silence)" if dominant is None else f"{dominant:.1f} Hz"
+        self.frequency_label.configure(text=f"Dominant frequency: {value}")
 
     def redraw(self) -> None:
         """Draw the plots of the current file, in decibels if the box is ticked."""

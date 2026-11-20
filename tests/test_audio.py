@@ -3,9 +3,10 @@
 import warnings
 
 import numpy as np
+import pytest
 from scipy.io import wavfile
 
-from frequency_analyzer.audio import load_wav
+from frequency_analyzer.audio import AudioFileError, load_wav
 
 
 def test_mono_16_bit_file_is_scaled_to_floats(tmp_path):
@@ -71,3 +72,36 @@ def _append_unknown_chunk(path):
     content += b"meta" + (4).to_bytes(4, "little") + b"info"
     content[4:8] = (len(content) - 8).to_bytes(4, "little")
     path.write_bytes(bytes(content))
+
+
+def test_missing_file_is_reported_with_its_path(tmp_path):
+    path = tmp_path / "missing.wav"
+
+    with pytest.raises(AudioFileError, match="does not exist") as error_info:
+        load_wav(path)
+
+    assert str(error_info.value) == f"{path} does not exist."
+    assert isinstance(error_info.value.__cause__, FileNotFoundError)
+
+
+@pytest.mark.parametrize(
+    "content",
+    [b"", b"hello", b"RIFF" + bytes(100), b"RIFF\x00\x00\x00\x00WAVEfmt "],
+    ids=["empty", "text", "riff-without-wave", "cut-in-header"],
+)
+def test_file_that_is_not_a_wav_file_is_reported(tmp_path, content):
+    path = tmp_path / "not_a_wav.wav"
+    path.write_bytes(content)
+
+    with pytest.raises(AudioFileError) as error_info:
+        load_wav(path)
+
+    assert str(error_info.value) == f"{path} is not a WAV file that can be read."
+
+
+def test_folder_cannot_be_opened(tmp_path):
+    folder = tmp_path / "folder.wav"
+    folder.mkdir()
+
+    with pytest.raises(AudioFileError, match="cannot be opened: "):
+        load_wav(folder)
