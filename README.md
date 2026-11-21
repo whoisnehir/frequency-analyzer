@@ -104,11 +104,3 @@ ruff check .
 pytest
 ```
 
-## Progress
-
-- [x] [M1 Setup](https://github.com/whoisnehir/frequency-analyzer/milestone/1): README, issue template, project structure, ruff, pytest, GitHub Actions
-- [x] [M2 Core analysis](https://github.com/whoisnehir/frequency-analyzer/milestone/2): load a WAV file, compute the FFT, plot the spectrum
-- [x] [M3 Full plots](https://github.com/whoisnehir/frequency-analyzer/milestone/3): waveform and spectrogram
-- [ ] [M4 GUI](https://github.com/whoisnehir/frequency-analyzer/milestone/4): tkinter window, file picker, embedded plots, dominant frequency, dark theme
-- [x] [M5 Polish](https://github.com/whoisnehir/frequency-analyzer/milestone/5): dB scale, error handling
-- [ ] [M6 Release](https://github.com/whoisnehir/frequency-analyzer/milestone/6): final code review, documentation and the v1.0.0 release
